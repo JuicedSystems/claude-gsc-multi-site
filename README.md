@@ -1,10 +1,21 @@
-# Google Search Console Multi-Site Connector for Claude
+<div align="center">
+
+<img src="docs/banner.svg" width="100%" alt="Search Console Multi-Site Connector for Claude">
+
+# Search Console Multi-Site Connector
+
+**For Claude Code, Cowork and Claude Desktop · by Juiced Systems**
 
 [![CI](https://github.com/JuicedSystems/claude-gsc-multi-site/actions/workflows/ci.yml/badge.svg)](https://github.com/JuicedSystems/claude-gsc-multi-site/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/badge/release-v1.0.0-6ea8ff)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/Node-18%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![MCP: stdio](https://img.shields.io/badge/MCP-stdio-555)](https://modelcontextprotocol.io/)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-blue)](mcp/package.json)
+
+[Setup guide](docs/SETUP.md) · [Tools](#tools) · [Privacy](PRIVACY.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md)
+
+</div>
 
 Connect **any number of Google accounts** — and every Search Console property they can see —
 through **one** connector. No more disconnecting one Google account to connect another.
@@ -64,10 +75,11 @@ Claude:  → inspect_url { "site": "kegsmiths.com", "url": "https://kegsmiths.co
    **In production**. ⚠️ If you leave it in *Testing*, Google expires refresh tokens after **7 days**
    and you'll have to reconnect weekly. An unverified app is fine for your own use — click
    *Advanced → Go to … (unsafe)* on the warning.
-4. **Credentials → Create credentials → OAuth client ID → Desktop app.** Copy the Client ID and
-   Client secret (`GOCSPX-…`).
+4. **Google Auth Platform → Clients → Create client → Desktop app** (older consoles: *Credentials →
+   Create credentials → OAuth client ID*). Copy the Client ID and Client secret (`GOCSPX-…`).
 
-One OAuth client connects **all** your Google accounts — you only do this once.
+One OAuth client connects **all** your Google accounts — you only do this once. The
+[setup guide](docs/SETUP.md) walks through every screen.
 
 ### 3. Connect your accounts
 
@@ -201,6 +213,29 @@ The end-to-end test runs a mock token endpoint and Search Console API, verifies 
 JWT signature, walks the full loopback sign-in, and checks discovery, merging, analytics, the
 all-sites summary, URL inspection, the write guard, renaming and removal. CI runs it on Node 18/20/22.
 
+## Documentation
+
+| Document | What's in it |
+|---|---|
+| [Setup guide](docs/SETUP.md) | Google Cloud walkthrough, connecting accounts, service accounts, managing sites |
+| [Privacy policy](PRIVACY.md) | What the plugin accesses, stores and sends, and how to delete it |
+| [Terms of use](TERMS.md) | License, your responsibilities, trademark notice |
+| [Security policy](SECURITY.md) | Security model and how to report a vulnerability |
+| [Changelog](CHANGELOG.md) | Release history |
+| [Contributing](CONTRIBUTING.md) | Development rules and how to run the tests |
+| [Submission packet](docs/SUBMISSION.md) | Listing copy and answers for directories and Google's consent screen |
+
 ## License
 
-[MIT](LICENSE) © 2026 Juiced Systems · Built by **Dylan Smith** / [Juiced Systems](https://github.com/JuicedSystems) · [dielawn.com](https://dielawn.com)
+[MIT](LICENSE) © 2026 Juiced Systems
+
+---
+
+<div align="center">
+
+Built by **Dylan Smith** / [Juiced Systems](https://github.com/JuicedSystems) · [dielawn.com](https://dielawn.com)
+
+<sub>Google and Google Search Console are trademarks of Google LLC. Claude is a trademark of Anthropic, PBC.
+This is an independent project, not affiliated with, endorsed by, or sponsored by Google or Anthropic.</sub>
+
+</div>
