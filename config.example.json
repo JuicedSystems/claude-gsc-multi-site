@@ -10,33 +10,33 @@
 
   "accounts": [
     {
-      "name": "dylan-juicedsystems.com",
+      "name": "you-example.com",
       "type": "oauth",
-      "email": "dylan@juicedsystems.com",
+      "email": "you@example.com",
       "access": "readonly",
       "refreshToken": "1//0xxxxxxxxxxxxxxxxxxxxxxxx"
     },
     {
       "name": "agency-sa",
       "type": "service_account",
-      "keyFile": "C:\\Users\\Dylan\\.gsc-multi-site\\agency-sa.json",
+      "keyFile": "C:\\Users\\you\\.gsc-multi-site\\agency-sa.json",
       "access": "full"
     }
   ],
 
   "sites": [
     {
-      "alias": "phoenixputter.com",
-      "label": "Phoenix Putter Co",
-      "siteUrl": "sc-domain:phoenixputter.com",
-      "account": "dylan-juicedsystems.com",
+      "alias": "example.com",
+      "label": "Example Store",
+      "siteUrl": "sc-domain:example.com",
+      "account": "you-example.com",
       "permissionLevel": "siteOwner",
       "alsoIn": ["agency-sa"]
     },
     {
-      "alias": "www.juicedsystems.com",
-      "siteUrl": "https://www.juicedsystems.com/",
-      "account": "dylan-juicedsystems.com",
+      "alias": "www.example.net",
+      "siteUrl": "https://www.example.net/",
+      "account": "you-example.com",
       "permissionLevel": "siteFullUser"
     },
     {

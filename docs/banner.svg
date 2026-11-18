@@ -24,6 +24,6 @@
     <circle cx="236" cy="150" r="8" fill="#d97757"/>
     <text x="290" y="128" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="54" font-weight="700" fill="#f4f5f7">Search Console Multi-Site</text>
     <text x="292" y="176" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="26" fill="#b6bdc9">Every Google account. Every property. One Claude plugin.</text>
-    <text x="292" y="226" font-family="Consolas, Menlo, monospace" font-size="18" fill="#6ea8ff">site: "phoenixputter.com" | "kegsmiths.com"   ·   15 tools   ·   zero dependencies</text>
+    <text x="292" y="226" font-family="Consolas, Menlo, monospace" font-size="18" fill="#6ea8ff">site: "example.com" | "example.org"   ·   15 tools   ·   zero dependencies</text>
   </g>
 </svg>

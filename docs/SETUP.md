@@ -124,14 +124,14 @@ Properties shared later appear after you say *"Refresh my Search Console sites."
 
 | Say to Claude | What happens |
 |---|---|
-| "Rename www.juicedsystems.com to juiced" | Changes the alias Claude uses (`update_site`) |
-| "Label phoenixputter.com as Phoenix Putter Co" | Adds a friendly label |
+| "Rename www.example.net to example-net" | Changes the alias Claude uses (`update_site`) |
+| "Label example.com as Example Store" | Adds a friendly label |
 | "Hide old-blog.example.com" | Removes it from the site list and all-sites reports; unhide any time |
 | "Refresh my Search Console sites" | Picks up new properties and drops lost ones; keeps your aliases |
 
 ## Disconnecting and uninstalling
 
-- **One account:** *"Remove the Google account dylan-juicedsystems.com from the Search Console
+- **One account:** *"Remove the Google account you-example.com from the Search Console
   connector."* Then revoke access at <https://myaccount.google.com/permissions>.
 - **Everything:** uninstall the plugin (`/plugin uninstall gsc-multi-site`) and delete the
   `.gsc-multi-site` folder in your home directory.

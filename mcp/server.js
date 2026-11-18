@@ -414,7 +414,7 @@ const tools = [
       "Search Console > Settings > Users and permissions. Discovers those properties and saves them.",
     inputSchema: schema(
       {
-        name: { type: "string", description: "Short account name, e.g. juiced-sa." },
+        name: { type: "string", description: "Short account name, e.g. client-sa." },
         keyFile: { type: "string", description: "Absolute path to the service account JSON key file." },
         access: { type: "string", enum: ["readonly", "full"], description: "readonly (default) or full (sitemap submit/delete)." },
         overwrite: { type: "boolean", description: "Replace an existing account with this name." },
@@ -483,7 +483,7 @@ const tools = [
       {
         site: { type: "string", description: "Current alias or siteUrl (hidden sites included)." },
         alias: { type: "string", description: "New alias (letters, numbers, . : / _ ~ -)." },
-        label: { type: "string", description: "Friendly label, e.g. 'Phoenix Putter Co'." },
+        label: { type: "string", description: "Friendly label, e.g. 'Example Store'." },
         hidden: { type: "boolean", description: "true to hide, false to show." },
       },
       ["site"],

@@ -8,13 +8,13 @@ import { join, resolve, dirname } from "node:path";
  * {
  *   "oauthClient": { "clientId": "...apps.googleusercontent.com", "clientSecret": "GOCSPX-..." },
  *   "accounts": [
- *     { "name": "dylan-main", "type": "oauth", "email": "...", "access": "readonly",
+ *     { "name": "main", "type": "oauth", "email": "...", "access": "readonly",
  *       "refreshToken": "1//..." },
- *     { "name": "juiced-sa", "type": "service_account", "keyFile": "C:\\keys\\gsc.json" }
+ *     { "name": "client-sa", "type": "service_account", "keyFile": "C:\\keys\\gsc.json" }
  *   ],
  *   "sites": [
- *     { "alias": "phoenixputter.com", "siteUrl": "sc-domain:phoenixputter.com",
- *       "account": "dylan-main", "permissionLevel": "siteOwner", "label": "Phoenix Putter Co" }
+ *     { "alias": "example.com", "siteUrl": "sc-domain:example.com",
+ *       "account": "main", "permissionLevel": "siteOwner", "label": "Example Store" }
  *   ]
  * }
  *

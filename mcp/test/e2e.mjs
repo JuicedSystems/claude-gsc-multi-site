@@ -17,15 +17,15 @@ const dir = mkdtempSync(join(tmpdir(), "gsc-e2e-"));
 // ---- mock Google ----
 const SITES = {
   "tok-A": [
-    { siteUrl: "sc-domain:phoenixputter.com", permissionLevel: "siteOwner" },
-    { siteUrl: "https://www.juicedsystems.com/", permissionLevel: "siteFullUser" },
+    { siteUrl: "sc-domain:example.com", permissionLevel: "siteOwner" },
+    { siteUrl: "https://www.example.net/", permissionLevel: "siteFullUser" },
   ],
   "tok-SA": [
-    { siteUrl: "sc-domain:phoenixputter.com", permissionLevel: "siteRestrictedUser" },
-    { siteUrl: "sc-domain:kegsmiths.com", permissionLevel: "siteFullUser" },
-    { siteUrl: "sc-domain:notmine.com", permissionLevel: "siteUnverifiedUser" },
+    { siteUrl: "sc-domain:example.com", permissionLevel: "siteRestrictedUser" },
+    { siteUrl: "sc-domain:example.org", permissionLevel: "siteFullUser" },
+    { siteUrl: "sc-domain:unverified.example.com", permissionLevel: "siteUnverifiedUser" },
   ],
-  "tok-NEW": [{ siteUrl: "sc-domain:shneakysanta.com", permissionLevel: "siteOwner" }],
+  "tok-NEW": [{ siteUrl: "sc-domain:blog.example.com", permissionLevel: "siteOwner" }],
 };
 const seen = { saBodies: [], jwtVerified: false, inspect: null };
 
@@ -66,7 +66,7 @@ const mock = createServer(async (req, res) => {
         access_token: "tok-NEW",
         refresh_token: "rt-NEW",
         expires_in: 3599,
-        id_token: `${b64urlJson({ alg: "none" })}.${b64urlJson({ email: "Dylan@ShneakySanta.com" })}.x`,
+        id_token: `${b64urlJson({ alg: "none" })}.${b64urlJson({ email: "Owner@Example.com" })}.x`,
       });
     }
     return json(400, { error: "unsupported_grant_type" });
@@ -84,7 +84,7 @@ const mock = createServer(async (req, res) => {
     if (m[2] === "searchAnalytics/query") {
       const b = JSON.parse(body);
       seen.saBodies.push({ siteUrl, ...b });
-      const scale = siteUrl.includes("kegsmiths") ? 3 : 1;
+      const scale = siteUrl.includes("example.org") ? 3 : 1;
       const older = b.startDate < "2026-01-01" ? 0.5 : 1; // makes "previous period" differ
       if (!b.dimensions?.length) {
         return json(200, { rows: [{ clicks: 100 * scale * older, impressions: 4000 * scale, ctr: 0.025 * older, position: 12.34 }], responseAggregationType: "byProperty" });
@@ -97,7 +97,7 @@ const mock = createServer(async (req, res) => {
         responseAggregationType: "byProperty",
       });
     }
-    if (m[2] === "sitemaps" && req.method === "GET") return json(200, { sitemap: [{ path: "https://kegsmiths.com/sitemap.xml", errors: "0" }] });
+    if (m[2] === "sitemaps" && req.method === "GET") return json(200, { sitemap: [{ path: "https://example.org/sitemap.xml", errors: "0" }] });
     if (m[2] === "sitemaps" && req.method === "PUT") return json(200, {});
   }
   if (req.method === "POST" && url.pathname === "/v1/urlInspection/index:inspect") {
@@ -126,7 +126,7 @@ writeFileSync(
   cfg,
   JSON.stringify({
     oauthClient: { clientId: "abc.apps.googleusercontent.com", clientSecret: "GOCSPX-secret" },
-    accounts: [{ name: "dylan-main", type: "oauth", email: "dylan@juicedsystems.com", refreshToken: "rt-A" }],
+    accounts: [{ name: "main", type: "oauth", email: "you@example.com", refreshToken: "rt-A" }],
   }),
 );
 
@@ -140,44 +140,44 @@ await s.init();
 // 1. discover sites for the OAuth account
 let r = await s.call("refresh_sites");
 assert.ok(!r.isError, r.text);
-assert.deepEqual(r.json.added.sort(), ["phoenixputter.com", "www.juicedsystems.com"]);
+assert.deepEqual(r.json.added.sort(), ["example.com", "www.example.net"].sort());
 
 // 2. add a service account: JWT is signed + verified, sites merged, unverified skipped
-r = await s.call("add_service_account", { name: "juiced-sa", keyFile });
+r = await s.call("add_service_account", { name: "client-sa", keyFile });
 assert.ok(!r.isError, r.text);
 assert.ok(seen.jwtVerified, "JWT signature not verified by mock");
 assert.equal(seen.saScope, "https://www.googleapis.com/auth/webmasters.readonly");
-assert.deepEqual(r.json.added, ["kegsmiths.com"]);
+assert.deepEqual(r.json.added, ["example.org"]);
 assert.equal(r.json.serviceAccountEmail, "gsc-bot@proj.iam.gserviceaccount.com");
 
 r = await s.call("list_sites");
 const byAlias = Object.fromEntries(r.json.sites.map((x) => [x.site, x]));
-assert.deepEqual(Object.keys(byAlias).sort(), ["kegsmiths.com", "phoenixputter.com", "www.juicedsystems.com"]);
-assert.equal(byAlias["phoenixputter.com"].account, "dylan-main", "owner account should win");
-assert.deepEqual(byAlias["phoenixputter.com"].alsoVisibleTo, ["juiced-sa"]);
+assert.deepEqual(Object.keys(byAlias).sort(), ["example.org", "example.com", "www.example.net"].sort());
+assert.equal(byAlias["example.com"].account, "main", "owner account should win");
+assert.deepEqual(byAlias["example.com"].alsoVisibleTo, ["client-sa"]);
 assert.ok(!r.text.includes("rt-A") && !r.text.includes("PRIVATE KEY"), "secret leaked");
 
 // 3. enum updated live + list_changed notification sent
 assert.ok(s.notifications.some((n) => n.method === "notifications/tools/list_changed"));
 const tl = await s.request("tools/list");
 const sa = tl.result.tools.find((t) => t.name === "search_analytics");
-assert.deepEqual([...sa.inputSchema.properties.site.enum].sort(), ["kegsmiths.com", "phoenixputter.com", "www.juicedsystems.com"]);
+assert.deepEqual([...sa.inputSchema.properties.site.enum].sort(), ["example.org", "example.com", "www.example.net"].sort());
 
 // 4. search analytics with filters
 r = await s.call("search_analytics", {
-  site: "kegsmiths.com",
+  site: "example.org",
   startDate: "2026-10-01",
   endDate: "2026-10-28",
   dimensions: ["query"],
-  filters: [{ dimension: "query", operator: "notContains", expression: "keg smiths" }],
+  filters: [{ dimension: "query", operator: "notContains", expression: "example brand" }],
   rowLimit: 50,
 });
 assert.ok(!r.isError, r.text);
 assert.equal(r.json.rows[0].query, "query-one");
 assert.equal(r.json.rows[0].ctr, 4.44);
 const sent = seen.saBodies.at(-1);
-assert.equal(sent.siteUrl, "sc-domain:kegsmiths.com");
-assert.deepEqual(sent.dimensionFilterGroups, [{ groupType: "and", filters: [{ dimension: "query", operator: "notContains", expression: "keg smiths" }] }]);
+assert.equal(sent.siteUrl, "sc-domain:example.org");
+assert.deepEqual(sent.dimensionFilterGroups, [{ groupType: "and", filters: [{ dimension: "query", operator: "notContains", expression: "example brand" }] }]);
 assert.equal(sent.rowLimit, 50);
 assert.equal(r.json.window.days, 28);
 
@@ -185,7 +185,7 @@ assert.equal(r.json.window.days, 28);
 r = await s.call("all_sites_summary", { endDate: "2026-01-14", days: 14 });
 assert.ok(!r.isError, r.text);
 assert.equal(r.json.sites.length, 3);
-assert.equal(r.json.sites[0].site, "kegsmiths.com", "sorted by clicks");
+assert.equal(r.json.sites[0].site, "example.org", "sorted by clicks");
 assert.equal(r.json.previousWindow.endDate, "2025-12-31");
 assert.equal(r.json.sites[0].change.clicks, 100); // 300 vs 150
 assert.equal(r.json.totals.clicks, 500);
@@ -193,24 +193,24 @@ assert.equal(r.json.totals.clicks, 500);
 assert.ok(r.json.sites.every((x) => !x.error), JSON.stringify(r.json.sites));
 
 // 6. performance summary
-r = await s.call("performance_summary", { site: "phoenixputter.com", top: 5 });
+r = await s.call("performance_summary", { site: "example.com", top: 5 });
 assert.ok(!r.isError, r.text);
 assert.equal(r.json.topQueries.length, 2);
 assert.equal(r.json.topPages[0].page, "page-one");
 assert.ok(r.json.window.endDate < new Date().toISOString().slice(0, 10));
 
 // 7. URL inspection: wrong property is caught and redirected
-r = await s.call("inspect_url", { site: "phoenixputter.com", url: "https://kegsmiths.com/products/mini-keg" });
-assert.ok(r.isError && /belongs to site "kegsmiths.com"/.test(r.text), r.text);
-r = await s.call("inspect_url", { site: "phoenixputter.com", url: "https://www.phoenixputter.com/putters" });
+r = await s.call("inspect_url", { site: "example.com", url: "https://example.org/products/widget" });
+assert.ok(r.isError && /belongs to site "example.org"/.test(r.text), r.text);
+r = await s.call("inspect_url", { site: "example.com", url: "https://www.example.com/products" });
 assert.ok(!r.isError, r.text);
-assert.equal(seen.inspect.siteUrl, "sc-domain:phoenixputter.com");
+assert.equal(seen.inspect.siteUrl, "sc-domain:example.com");
 assert.equal(r.json.indexStatusResult.verdict, "PASS");
 
 // 8. sitemaps: read works, write blocked for read-only accounts
-r = await s.call("list_sitemaps", { site: "kegsmiths.com" });
+r = await s.call("list_sitemaps", { site: "example.org" });
 assert.equal(r.json.sitemaps.length, 1);
-r = await s.call("submit_sitemap", { site: "kegsmiths.com", sitemapUrl: "https://kegsmiths.com/sitemap.xml" });
+r = await s.call("submit_sitemap", { site: "example.org", sitemapUrl: "https://example.org/sitemap.xml" });
 assert.ok(r.isError && /read-only/.test(r.text));
 
 // 9. OAuth loopback sign-in for a second Google account
@@ -224,37 +224,37 @@ const redirect = `${auth.searchParams.get("redirect_uri")}/?state=${auth.searchP
 const page = await fetch(redirect).then((x) => x.text());
 assert.ok(page.includes("Connected to Claude"), page);
 r = await s.call("list_accounts");
-const newAcct = r.json.accounts.find((a) => a.email === "Dylan@ShneakySanta.com");
+const newAcct = r.json.accounts.find((a) => a.email === "Owner@Example.com");
 assert.ok(newAcct, JSON.stringify(r.json));
-assert.equal(newAcct.name, "dylan-shneakysanta.com");
+assert.equal(newAcct.name, "owner-example.com");
 assert.equal(newAcct.access, "full");
-assert.deepEqual(newAcct.sites, ["shneakysanta.com"]);
+assert.deepEqual(newAcct.sites, ["blog.example.com"]);
 assert.equal(r.json.signIns[0].status, "connected");
 
 // full-access account can write
-r = await s.call("submit_sitemap", { site: "shneakysanta.com", sitemapUrl: "https://shneakysanta.com/sitemap.xml" });
+r = await s.call("submit_sitemap", { site: "blog.example.com", sitemapUrl: "https://blog.example.com/sitemap.xml" });
 assert.ok(!r.isError, r.text);
-assert.equal(r.json.submitted, "https://shneakysanta.com/sitemap.xml");
+assert.equal(r.json.submitted, "https://blog.example.com/sitemap.xml");
 
 // 10. rename + hide, then remove an account
-r = await s.call("update_site", { site: "www.juicedsystems.com", alias: "juiced", label: "Juiced Systems" });
+r = await s.call("update_site", { site: "www.example.net", alias: "example-net", label: "Example Net" });
 assert.ok(!r.isError, r.text);
-r = await s.call("update_site", { site: "kegsmiths.com", hidden: true });
+r = await s.call("update_site", { site: "example.org", hidden: true });
 r = await s.call("list_sites");
-assert.deepEqual(r.json.sites.map((x) => x.site).sort(), ["juiced", "phoenixputter.com", "shneakysanta.com"]);
+assert.deepEqual(r.json.sites.map((x) => x.site).sort(), ["example-net", "example.com", "blog.example.com"].sort());
 // alias survives a refresh
 await s.call("refresh_sites");
 r = await s.call("list_sites");
-assert.ok(r.json.sites.some((x) => x.site === "juiced" && x.label === "Juiced Systems"));
+assert.ok(r.json.sites.some((x) => x.site === "example-net" && x.label === "Example Net"));
 
-r = await s.call("remove_account", { name: "dylan-main" });
-assert.deepEqual(r.json.removedSites, ["juiced"]);
+r = await s.call("remove_account", { name: "main" });
+assert.deepEqual(r.json.removedSites, ["example-net"]);
 r = await s.call("list_sites");
-const pp = r.json.sites.find((x) => x.site === "phoenixputter.com");
-assert.equal(pp.account, "juiced-sa", "shared site should move to the remaining account");
+const pp = r.json.sites.find((x) => x.site === "example.com");
+assert.equal(pp.account, "client-sa", "shared site should move to the remaining account");
 
 const onDisk = JSON.parse(readFileSync(cfg, "utf8"));
-assert.ok(!onDisk.accounts.some((a) => a.name === "dylan-main"));
+assert.ok(!onDisk.accounts.some((a) => a.name === "main"));
 
 console.log("ok e2e: auth (refresh + JWT + loopback), discovery/merge, analytics, all-sites, inspection, sitemaps, rename/remove");
 clearTimeout(timer);

@@ -56,10 +56,10 @@ Ready-to-paste copy and answers for every place this plugin is listed or reviewe
 **Example prompts**
 
 1. "How are all my sites doing this month compared to last month?"
-2. "Top non-branded queries for phoenixputter.com on mobile, last 90 days."
-3. "Which pages on kegsmiths.com lost the most clicks this quarter, and for which queries?"
-4. "Is https://kegsmiths.com/products/mini-keg indexed? What canonical did Google pick?"
-5. "Resubmit the sitemap for shneakysanta.com."
+2. "Top non-branded queries for example.com on mobile, last 90 days."
+3. "Which pages on example.org lost the most clicks this quarter, and for which queries?"
+4. "Is https://example.org/products/widget indexed? What canonical did Google pick?"
+5. "Resubmit the sitemap for blog.example.com."
 
 ## Anthropic Claude directory
 
@@ -114,7 +114,7 @@ and for a future hosted version that would need Google's verification.
 | Application home page | <https://github.com/JuicedSystems/claude-gsc-multi-site> |
 | Privacy policy | <https://github.com/JuicedSystems/claude-gsc-multi-site/blob/main/PRIVACY.md> |
 | Terms of service | <https://github.com/JuicedSystems/claude-gsc-multi-site/blob/main/TERMS.md> |
-| Authorized domains | Only needed for verification; GitHub can't be verified as yours, so host the three pages on `juicedsystems.com` or `dielawn.com` first |
+| Authorized domains | Only needed for verification; GitHub can't be verified as yours, so host the three pages on a domain you own first |
 | Scopes | `…/auth/webmasters.readonly`, `…/auth/webmasters` (optional), `openid`, `email` |
 | Audience | External, **In production** |
 

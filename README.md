@@ -24,15 +24,15 @@ through **one** connector. No more disconnecting one Google account to connect a
 You:     How are all my sites doing this month?
 Claude:  → all_sites_summary { "days": 28 }
          Across 6 sites: 18,420 clicks (+12.4%) and 612k impressions (+8.1%) vs the prior 28 days.
-         kegsmiths.com led the gain (+31% clicks) …
+         example.org led the gain (+31% clicks) …
 
-You:     Top non-branded queries for phoenixputter.com, mobile only.
-Claude:  → search_analytics { "site": "phoenixputter.com", "dimensions": ["query"],
-             "filters": [ { "dimension": "query", "operator": "notContains", "expression": "phoenix" },
+You:     Top non-branded queries for example.com, mobile only.
+Claude:  → search_analytics { "site": "example.com", "dimensions": ["query"],
+             "filters": [ { "dimension": "query", "operator": "notContains", "expression": "example" },
                           { "dimension": "device", "expression": "MOBILE" } ] }
 
-You:     Is https://kegsmiths.com/products/mini-keg indexed?
-Claude:  → inspect_url { "site": "kegsmiths.com", "url": "https://kegsmiths.com/products/mini-keg" }
+You:     Is https://example.org/products/widget indexed?
+Claude:  → inspect_url { "site": "example.org", "url": "https://example.org/products/widget" }
 ```
 <sub>Illustrative transcript. Tool names and arguments match the real schema.</sub>
 
@@ -47,7 +47,7 @@ Claude:  → inspect_url { "site": "kegsmiths.com", "url": "https://kegsmiths.co
   property, with % change vs the previous period.
 - **Smart de-duplication.** A property visible to several accounts is listed once and read through the
   account with the highest permission. Domain properties get the bare domain as their alias
-  (`phoenixputter.com`); URL-prefix properties get the host (`www.juicedsystems.com`). Rename or hide any.
+  (`example.com`); URL-prefix properties get the host (`www.example.net`). Rename or hide any.
 - **Sign-in from chat.** `connect_google_account` returns a Google link; approve it in your browser and
   the account is saved (OAuth installed-app flow with PKCE and a one-shot `127.0.0.1` listener).
 - **Read-only by default.** Accounts connect with `webmasters.readonly`. Opt into `full` per account only
@@ -98,7 +98,7 @@ For properties you can't sign into (a client's site, say): create a service acco
 download its JSON key, and have the property owner add the service account's email as a user in
 **Search Console → Settings → Users and permissions**. Then:
 
-> Add the service account at C:\Users\Dylan\.gsc-multi-site\agency-sa.json as "agency-sa".
+> Add the service account at C:\Users\you\.gsc-multi-site\agency-sa.json as "agency-sa".
 
 ## Tools
 
