@@ -34,7 +34,7 @@ import {
   GoogleError,
 } from "./lib/google.js";
 
-const SERVER_INFO = { name: "gsc-multi-site", version: "1.0.0" };
+const SERVER_INFO = { name: "gsc-multi-site", version: "1.1.0" };
 const SUPPORTED_PROTOCOL = "2025-06-18";
 
 let config = loadConfig();
@@ -84,6 +84,24 @@ function applySiteProp() {
   }
 }
 applySiteProp();
+
+const AUTO_HIDDEN_NOTE =
+  "These URL-prefix properties sit inside a connected Domain property, so they were hidden to avoid " +
+  "double-counting. Unhide one with update_site { site, hidden: false } if you want it listed separately.";
+
+/** Hidden sites from the raw config, for list_sites. */
+function hiddenSummary() {
+  try {
+    const hidden = readRawConfig(config.path).sites.filter((s) => s.hidden);
+    if (!hidden.length) return {};
+    return {
+      hidden: hidden.map((s) => ({ site: s.alias, siteUrl: s.siteUrl, ...(s.coveredBy ? { coveredBy: s.coveredBy } : {}) })),
+      hiddenNote: "Hidden sites are still connected. Unhide with update_site { site, hidden: false }.",
+    };
+  } catch {
+    return {};
+  }
+}
 
 function schema(properties, required = []) {
   return { type: "object", properties, required };
@@ -135,7 +153,8 @@ function metrics(row) {
     clicks: row.clicks ?? 0,
     impressions: row.impressions ?? 0,
     ctr: round((row.ctr ?? 0) * 100, 2), // percent
-    position: row.position != null ? round(row.position, 1) : null,
+    // Google reports position 0 when a property had no impressions; that is "no rank", not rank 0.
+    position: row.position != null && (row.impressions ?? 0) > 0 ? round(row.position, 1) : null,
   };
 }
 function pctChange(now, before) {
@@ -233,7 +252,13 @@ async function saveAccountAndDiscover(entry, liveAccount) {
   writeRawConfig(raw, resolveConfigPath());
   reloadConfig();
   const siteCount = [...config.sites.values()].filter((s) => s.account === entry.name).length;
-  return { name: entry.name, siteCount, added: merged.added, removed: merged.removed };
+  return {
+    name: entry.name,
+    siteCount,
+    added: merged.added,
+    removed: merged.removed,
+    ...(merged.autoHidden.length ? { autoHidden: merged.autoHidden, autoHiddenNote: AUTO_HIDDEN_NOTE } : {}),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -272,6 +297,7 @@ const tools = [
           };
         }),
         accounts: [...config.accounts.keys()],
+        ...hiddenSummary(),
         ...(config.error ? { error: config.error } : {}),
         ...(config.warning ? { warning: config.warning } : {}),
       }),
@@ -334,9 +360,10 @@ const tools = [
       const client = config.oauthClient || readRawConfig(resolveConfigPath()).oauthClient;
       if (!client?.clientId || !client?.clientSecret) {
         return fail(
-          "No OAuth client saved yet. Create one in Google Cloud Console > APIs & Services > Credentials > " +
-            "Create credentials > OAuth client ID > Application type 'Desktop app', then call this again with " +
-            "clientId and clientSecret. (Also enable the 'Google Search Console API' in that project.)",
+          "No OAuth client saved yet. In Google Cloud Console: enable the 'Google Search Console API', set up " +
+            "Google Auth Platform (External audience, published to 'In production'), then Clients > Create client > " +
+            "Application type 'Desktop app'. Call this again with clientId and clientSecret. Step-by-step guide: " +
+            "https://github.com/JuicedSystems/claude-gsc-multi-site/blob/main/docs/SETUP.md",
         );
       }
 
@@ -357,11 +384,13 @@ const tools = [
         authUrl: flow.authUrl,
         access,
         instructions:
-          "Open authUrl in a browser on this computer and choose the Google account. If Google warns the " +
-          "app isn't verified, click Advanced > Go to (your app) — it's your own client. When the tab says " +
-          "'Connected', call list_sites. If the redirect page fails to load (browser on another machine), " +
-          "copy the full address from the browser bar and call finish_google_account with it. The link " +
-          "expires in 10 minutes.",
+          "Give the user authUrl as a clickable link. They open it, choose ONE Google account, and if Google " +
+          "says the app isn't verified, click Advanced > Go to (app name) — it's their own client. Success: the " +
+          "tab says 'Connected to Claude'; then call list_accounts or list_sites. If the tab instead says the " +
+          "site can't be reached (common when the browser and Claude run on different machines, or the " +
+          "desktop app bridges to this computer), ask the user to copy the FULL address from the address bar " +
+          "(http://127.0.0.1:...?state=...&code=...) and paste it in chat, then call finish_google_account " +
+          "with it. The link expires in 10 minutes; for the next account, call connect_google_account again.",
       });
     },
   },
@@ -469,6 +498,7 @@ const tools = [
         siteCount: siteNames.length,
         added: merged.added,
         removed: merged.removed,
+        ...(merged.autoHidden.length ? { autoHidden: merged.autoHidden, autoHiddenNote: AUTO_HIDDEN_NOTE } : {}),
         ...(Object.keys(errors).length ? { accountErrors: errors } : {}),
       });
     },

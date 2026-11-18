@@ -4,6 +4,26 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-11-18
+
+Changes from the first real-world setup: three Google accounts, Workspace and Gmail mixed.
+
+### Added
+
+- URL-prefix properties inside a connected Domain property are hidden automatically on discovery
+  (`coveredBy`), so `all_sites_summary` totals don't count the same traffic twice. `list_sites` now
+  lists hidden sites and how to unhide them.
+- Setup guide rewritten from the real Google Auth Platform flow: the Branding home page, privacy link and
+  authorized domain that unlock **Publish app**, the "can't be reached" paste-the-URL step, Workspace
+  admin blocks, the test-user alternative, an FAQ, and a privacy-page template.
+- Setup-flow illustration in the README and guide.
+
+### Fixed
+
+- Properties with no impressions now report `position: null` instead of `0`.
+- Sign-in instructions returned to Claude now explain the paste-the-URL fallback, and the
+  missing-client message links to the setup guide.
+
 ## [1.0.0] - 2026-11-18
 
 ### Added
@@ -23,4 +43,5 @@ All notable changes to this project are documented here. The format follows
 - Offline smoke test and end-to-end test against a local mock of Google; CI on Node 18, 20 and 22.
 - Documentation: README, setup guide, privacy policy, terms, security policy, submission packet.
 
+[1.1.0]: https://github.com/JuicedSystems/claude-gsc-multi-site/releases/tag/v1.1.0
 [1.0.0]: https://github.com/JuicedSystems/claude-gsc-multi-site/releases/tag/v1.0.0

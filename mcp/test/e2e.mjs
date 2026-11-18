@@ -19,6 +19,7 @@ const SITES = {
   "tok-A": [
     { siteUrl: "sc-domain:example.com", permissionLevel: "siteOwner" },
     { siteUrl: "https://www.example.net/", permissionLevel: "siteFullUser" },
+    { siteUrl: "https://www.example.com/", permissionLevel: "siteOwner" }, // inside sc-domain:example.com
   ],
   "tok-SA": [
     { siteUrl: "sc-domain:example.com", permissionLevel: "siteRestrictedUser" },
@@ -86,6 +87,10 @@ const mock = createServer(async (req, res) => {
       seen.saBodies.push({ siteUrl, ...b });
       const scale = siteUrl.includes("example.org") ? 3 : 1;
       const older = b.startDate < "2026-01-01" ? 0.5 : 1; // makes "previous period" differ
+      if (!b.dimensions?.length && siteUrl.includes("blog.example.com")) {
+        // A property with no impressions: Google reports position 0.
+        return json(200, { rows: [{ clicks: 0, impressions: 0, ctr: 0, position: 0 }], responseAggregationType: "byProperty" });
+      }
       if (!b.dimensions?.length) {
         return json(200, { rows: [{ clicks: 100 * scale * older, impressions: 4000 * scale, ctr: 0.025 * older, position: 12.34 }], responseAggregationType: "byProperty" });
       }
@@ -141,6 +146,7 @@ await s.init();
 let r = await s.call("refresh_sites");
 assert.ok(!r.isError, r.text);
 assert.deepEqual(r.json.added.sort(), ["example.com", "www.example.net"].sort());
+assert.deepEqual(r.json.autoHidden, ["www.example.com"], "URL-prefix inside a Domain property is auto-hidden");
 
 // 2. add a service account: JWT is signed + verified, sites merged, unverified skipped
 r = await s.call("add_service_account", { name: "client-sa", keyFile });
@@ -156,6 +162,7 @@ assert.deepEqual(Object.keys(byAlias).sort(), ["example.org", "example.com", "ww
 assert.equal(byAlias["example.com"].account, "main", "owner account should win");
 assert.deepEqual(byAlias["example.com"].alsoVisibleTo, ["client-sa"]);
 assert.ok(!r.text.includes("rt-A") && !r.text.includes("PRIVATE KEY"), "secret leaked");
+assert.deepEqual(r.json.hidden, [{ site: "www.example.com", siteUrl: "https://www.example.com/", coveredBy: "example.com" }]);
 
 // 3. enum updated live + list_changed notification sent
 assert.ok(s.notifications.some((n) => n.method === "notifications/tools/list_changed"));
@@ -231,6 +238,11 @@ assert.equal(newAcct.access, "full");
 assert.deepEqual(newAcct.sites, ["blog.example.com"]);
 assert.equal(r.json.signIns[0].status, "connected");
 
+// zero-impression property reports no position (not 0)
+r = await s.call("all_sites_summary", { sites: ["blog.example.com"] });
+assert.equal(r.json.sites[0].impressions, 0);
+assert.equal(r.json.sites[0].position, null, JSON.stringify(r.json.sites[0]));
+
 // full-access account can write
 r = await s.call("submit_sitemap", { site: "blog.example.com", sitemapUrl: "https://blog.example.com/sitemap.xml" });
 assert.ok(!r.isError, r.text);
@@ -248,7 +260,7 @@ r = await s.call("list_sites");
 assert.ok(r.json.sites.some((x) => x.site === "example-net" && x.label === "Example Net"));
 
 r = await s.call("remove_account", { name: "main" });
-assert.deepEqual(r.json.removedSites, ["example-net"]);
+assert.deepEqual(r.json.removedSites, ["example-net", "www.example.com"]);
 r = await s.call("list_sites");
 const pp = r.json.sites.find((x) => x.site === "example.com");
 assert.equal(pp.account, "client-sa", "shared site should move to the remaining account");

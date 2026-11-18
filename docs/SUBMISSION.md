@@ -116,7 +116,7 @@ and for a future hosted version that would need Google's verification.
 | Terms of service | <https://github.com/JuicedSystems/claude-gsc-multi-site/blob/main/TERMS.md> |
 | Authorized domains | Only needed for verification; GitHub can't be verified as yours, so host the three pages on a domain you own first |
 | Scopes | `…/auth/webmasters.readonly`, `…/auth/webmasters` (optional), `openid`, `email` |
-| Audience | External, **In production** |
+| Audience | External, **In production**. Publish stays greyed out until Branding has a home page, privacy policy link and authorized domain on a domain you own |
 
 **Scope justification (if Google asks)**
 

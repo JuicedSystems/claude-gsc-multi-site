@@ -7,7 +7,7 @@
 **For Claude Code, Cowork and Claude Desktop · by Juiced Systems**
 
 [![CI](https://github.com/JuicedSystems/claude-gsc-multi-site/actions/workflows/ci.yml/badge.svg)](https://github.com/JuicedSystems/claude-gsc-multi-site/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/badge/release-v1.0.0-6ea8ff)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/release-v1.1.0-6ea8ff)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/Node-18%2B-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![MCP: stdio](https://img.shields.io/badge/MCP-stdio-555)](https://modelcontextprotocol.io/)
@@ -46,8 +46,10 @@ Claude:  → inspect_url { "site": "example.org", "url": "https://example.org/pr
 - **All sites in one call.** `all_sites_summary` returns clicks, impressions, CTR and position for every
   property, with % change vs the previous period.
 - **Smart de-duplication.** A property visible to several accounts is listed once and read through the
-  account with the highest permission. Domain properties get the bare domain as their alias
-  (`example.com`); URL-prefix properties get the host (`www.example.net`). Rename or hide any.
+  account with the highest permission. URL-prefix properties that sit inside a connected Domain property
+  are hidden automatically, so all-sites totals never count the same click twice. Domain properties get
+  the bare domain as their alias (`example.com`); URL-prefix properties get the host (`www.example.net`).
+  Rename, label, hide or unhide any.
 - **Sign-in from chat.** `connect_google_account` returns a Google link; approve it in your browser and
   the account is saved (OAuth installed-app flow with PKCE and a one-shot `127.0.0.1` listener).
 - **Read-only by default.** Accounts connect with `webmasters.readonly`. Opt into `full` per account only
@@ -57,6 +59,11 @@ Claude:  → inspect_url { "site": "example.org", "url": "https://example.org/pr
 
 ## Quickstart
 
+<p align="center"><img src="docs/setup-flow.svg" width="100%" alt="Setup in four steps: install the plugin, create a Google OAuth client once, sign in to each Google account, ask Claude"></p>
+
+> **The full, screen-by-screen walkthrough is in the [setup guide](docs/SETUP.md).** This is the short
+> version.
+
 ### 1. Install
 
 ```bash
@@ -65,32 +72,38 @@ Claude:  → inspect_url { "site": "example.org", "url": "https://example.org/pr
 /reload-plugins
 ```
 
-> Needs Node.js 18+ on your PATH. Developing locally? `/plugin marketplace add ./claude-gsc-multi-site`.
+> Needs Node.js 18+ on your PATH. Runs in Claude Code, Cowork and the Claude desktop app.
 
-### 2. One-time Google Cloud setup (≈5 minutes)
+### 2. Create your Google OAuth client (one time, ≈10 minutes)
 
-1. [console.cloud.google.com](https://console.cloud.google.com) → create a project (e.g. "Claude GSC").
-2. **APIs & Services → Library** → enable **Google Search Console API**.
-3. **OAuth consent screen**: External, add your app name/email. Set publishing status to
-   **In production**. ⚠️ If you leave it in *Testing*, Google expires refresh tokens after **7 days**
-   and you'll have to reconnect weekly. An unverified app is fine for your own use — click
-   *Advanced → Go to … (unsafe)* on the warning.
-4. **Google Auth Platform → Clients → Create client → Desktop app** (older consoles: *Credentials →
-   Create credentials → OAuth client ID*). Copy the Client ID and Client secret (`GOCSPX-…`).
+In [Google Cloud Console](https://console.cloud.google.com):
 
-One OAuth client connects **all** your Google accounts — you only do this once. The
-[setup guide](docs/SETUP.md) walks through every screen.
+1. **New project** → **APIs & Services → Library** → enable **Google Search Console API**.
+2. **Google Auth Platform → Get started:** app name, support email, audience **External**, contact
+   email → Create.
+3. **Branding:** add an **Application home page** and **privacy policy link** on a website you own, and
+   that domain under **Authorized domains**. Leave the logo empty. Save.
+   ([Privacy page template](docs/SETUP.md#privacy-page-template))
+4. **Audience → Publish app** → status **In production**.
+   Skip this and Google expires your sign-ins every 7 days.
+5. **Clients → Create client → Desktop app.** Copy the Client ID and secret (and download the JSON).
 
-### 3. Connect your accounts
+One client connects **all** your Google accounts.
 
-Run **`/gsc-setup`** and follow along, or just say:
+### 3. Connect each Google account
+
+Run **`/gsc-setup`**, or say:
 
 > Connect my Google Search Console account. Client ID is … and secret is …
 
-Claude gives you a sign-in link → pick the Google account → the tab says *Connected* → done.
-Repeat for every other Google account (no client needed after the first).
+Claude replies with a sign-in link. Pick an account, click **Advanced → Go to Claude GSC** on Google's
+unverified-app screen, and approve.
 
-Then try **`/gsc-sites`** or **`/gsc-report`**.
+- Tab says **Connected to Claude**: done.
+- Tab says **This site can't be reached**: copy the full address-bar URL and paste it into Claude.
+  It finishes the sign-in.
+
+Say *"Connect another Google account"* for each of the rest, then try **`/gsc-report`**.
 
 ### Alternative: service accounts
 
@@ -158,6 +171,7 @@ Override the location with `GSC_MULTI_SITE_CONFIG`.
 | `accounts[].access` | `readonly` (default) or `full` |
 | `sites[].alias` | The value Claude passes as `site`. Editable; survives refreshes |
 | `sites[].label` / `hidden` | Friendly name / exclude from the list and all-sites summary |
+| `sites[].coveredBy` | Set when a URL-prefix property was auto-hidden because a connected Domain property contains it |
 | `sites[].alsoIn` | Other accounts that can also see this property (fallback if one is removed) |
 
 ## Data & network access
@@ -191,6 +205,14 @@ normal use, and `GSC_MULTI_SITE_CONFIG` only moves the config file.
 
 ## Troubleshooting
 
+The [setup guide](docs/SETUP.md#troubleshooting) has the full table. The most common ones:
+
+- **Publish app is greyed out** — Branding needs a home page, a privacy policy link and an authorized
+  domain on a site you own. Save, then reload the Audience page.
+- **"This site can't be reached" after approving** — expected when the browser and the plugin are on
+  different machines. Paste the full `http://127.0.0.1:…` URL into Claude.
+- **"Access blocked" for a Workspace account** — the Workspace admin must trust the app's Client ID in
+  the Admin console (API controls).
 - **`invalid_grant` after about a week** — your OAuth consent screen is in *Testing*. Switch it to
   *In production* and reconnect the account.
 - **"Google Search Console API has not been used in project …"** — enable the API in the same project
@@ -201,6 +223,18 @@ normal use, and `GSC_MULTI_SITE_CONFIG` only moves the config file.
 - **"read-only" on a sitemap write** — reconnect that account with access `full`.
 - **Sign-in tab can't load `127.0.0.1`** — the browser is on a different machine than Claude. Copy the
   URL from the address bar and ask Claude to finish with it (`finish_google_account`).
+
+## FAQ
+
+**Do I have to host anything?** No. The plugin runs on your computer and talks only to Google. The only
+web pages involved are the home page and privacy page on your own site, which Google requires before you
+can publish your OAuth app.
+
+**Does the plugin's author see my data?** No. There's no server, account or telemetry. See
+[PRIVACY.md](PRIVACY.md).
+
+**Why my own Google client instead of a shared one?** So your Google access stays between you and Google,
+and nobody else's app quotas or policies can affect you.
 
 ## Development
 

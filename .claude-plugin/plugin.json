@@ -2,7 +2,7 @@
   "name": "gsc-multi-site",
   "displayName": "Search Console Multi-Site Connector",
   "description": "Connect multiple Google accounts and every Search Console property they can see to Claude through one connector. Every tool requires naming the site, and all_sites_summary reports on all of them at once.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Juiced Systems",
     "email": "dylan@juicedsystems.com",

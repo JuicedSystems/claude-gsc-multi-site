@@ -196,7 +196,10 @@ function fallbackAlias(siteUrl) {
  *
  * @param {Array} existing           raw sites array from the file
  * @param {Map<string, Array<{siteUrl, permissionLevel}>>} discovered  account -> entries
- * @returns {{ sites: Array, added: string[], removed: string[] }}
+ *  - a new URL-prefix property inside a connected Domain property is hidden
+ *    (`coveredBy`) so all-sites totals don't count the same traffic twice
+ *
+ * @returns {{ sites: Array, added: string[], removed: string[], autoHidden: string[] }}
  */
 export function mergeSites(existing, discovered) {
   const refreshed = new Set(discovered.keys());
@@ -225,6 +228,7 @@ export function mergeSites(existing, discovered) {
 
   const taken = new Set([...byUrl.values()].map((s) => s.alias));
   const added = [];
+  const autoHidden = [];
   // Domain properties first so they win the bare-domain alias.
   const urls = [...access.keys()].sort((a, b) => {
     const da = a.startsWith("sc-domain:") ? 0 : 1;
@@ -253,14 +257,25 @@ export function mergeSites(existing, discovered) {
     while (taken.has(alias)) alias = `${base}~${n++}`;
     taken.add(alias);
     const best = viewers[0];
-    byUrl.set(url, {
+    const entry = {
       alias,
       siteUrl: url,
       account: best.account,
       permissionLevel: best.permissionLevel,
       alsoIn: viewers.slice(1).map((v) => v.account),
-    });
-    added.push(alias);
+    };
+    // A URL-prefix property inside a connected Domain property is a subset of
+    // its traffic; listing both would double-count all-sites totals. Hide it on
+    // first discovery (the user can unhide it with update_site).
+    const parent = coveringDomain(url, byUrl);
+    if (parent) {
+      entry.hidden = true;
+      entry.coveredBy = parent.alias;
+      autoHidden.push(alias);
+    } else {
+      added.push(alias);
+    }
+    byUrl.set(url, entry);
   }
 
   const sites = [...byUrl.values()].map((s) => {
@@ -269,5 +284,27 @@ export function mergeSites(existing, discovered) {
     return o;
   });
   sites.sort((a, b) => a.alias.localeCompare(b.alias));
-  return { sites, added, removed };
+  return { sites, added, removed, autoHidden };
+}
+
+/** Host of a URL-prefix property, or null for domain properties / bad URLs. */
+export function prefixHost(siteUrl) {
+  if (siteUrl.startsWith("sc-domain:")) return null;
+  try {
+    return new URL(siteUrl).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+/** The connected Domain property that contains this URL-prefix property, if any. */
+function coveringDomain(siteUrl, byUrl) {
+  const host = prefixHost(siteUrl);
+  if (!host) return null;
+  for (const s of byUrl.values()) {
+    if (!s.siteUrl.startsWith("sc-domain:")) continue;
+    const dom = s.siteUrl.slice(10).toLowerCase();
+    if (host === dom || host.endsWith("." + dom)) return s;
+  }
+  return null;
 }
