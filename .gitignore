@@ -1,0 +1,8 @@
+# Never commit real credentials
+config.json
+*-sa.json
+*service-account*.json
+
+# Node
+node_modules/
+npm-debug.log*

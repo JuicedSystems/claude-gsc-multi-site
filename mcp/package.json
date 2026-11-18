@@ -1,0 +1,17 @@
+{
+  "name": "gsc-multi-site-mcp",
+  "version": "1.0.0",
+  "description": "Zero-dependency MCP server connecting multiple Google accounts and Search Console properties, with a required per-tool site selector and an all-sites summary.",
+  "type": "module",
+  "main": "server.js",
+  "bin": {
+    "gsc-multi-site-mcp": "server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --check server.js && node --check lib/config.js && node --check lib/google.js && node test/smoke.mjs && node test/e2e.mjs"
+  }
+}

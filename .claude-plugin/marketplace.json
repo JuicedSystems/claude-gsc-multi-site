@@ -1,0 +1,15 @@
+{
+  "name": "juiced-systems-gsc",
+  "owner": {
+    "name": "Juiced Systems",
+    "email": "dylan@juicedsystems.com"
+  },
+  "description": "Juiced Systems Claude plugins: Google Search Console multi-site connector.",
+  "plugins": [
+    {
+      "name": "gsc-multi-site",
+      "source": "./",
+      "description": "Connect multiple Google accounts and Search Console properties with a required per-tool site selector, plus an all-sites summary."
+    }
+  ]
+}

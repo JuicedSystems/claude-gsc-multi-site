@@ -1,0 +1,50 @@
+{
+  "//": "You normally never edit this by hand: /gsc-setup writes it for you.",
+  "//2": "Location: ~/.gsc-multi-site/config.json  (Windows: C:\\Users\\<you>\\.gsc-multi-site\\config.json)",
+  "//3": "Never commit the real file — it holds refresh tokens and key paths.",
+
+  "oauthClient": {
+    "clientId": "1234567890-abc.apps.googleusercontent.com",
+    "clientSecret": "GOCSPX-xxxxxxxxxxxxxxxxxxxx"
+  },
+
+  "accounts": [
+    {
+      "name": "dylan-juicedsystems.com",
+      "type": "oauth",
+      "email": "dylan@juicedsystems.com",
+      "access": "readonly",
+      "refreshToken": "1//0xxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "name": "agency-sa",
+      "type": "service_account",
+      "keyFile": "C:\\Users\\Dylan\\.gsc-multi-site\\agency-sa.json",
+      "access": "full"
+    }
+  ],
+
+  "sites": [
+    {
+      "alias": "phoenixputter.com",
+      "label": "Phoenix Putter Co",
+      "siteUrl": "sc-domain:phoenixputter.com",
+      "account": "dylan-juicedsystems.com",
+      "permissionLevel": "siteOwner",
+      "alsoIn": ["agency-sa"]
+    },
+    {
+      "alias": "www.juicedsystems.com",
+      "siteUrl": "https://www.juicedsystems.com/",
+      "account": "dylan-juicedsystems.com",
+      "permissionLevel": "siteFullUser"
+    },
+    {
+      "alias": "old-blog.example.com",
+      "siteUrl": "sc-domain:old-blog.example.com",
+      "account": "agency-sa",
+      "permissionLevel": "siteOwner",
+      "hidden": true
+    }
+  ]
+}

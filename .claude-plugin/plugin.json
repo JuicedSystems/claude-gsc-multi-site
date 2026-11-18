@@ -1,0 +1,18 @@
+{
+  "name": "gsc-multi-site",
+  "displayName": "Google Search Console Multi-Site Connector",
+  "description": "Connect any number of Google accounts and every Search Console property they can see, through one connector. Every tool requires naming the site, and all_sites_summary pulls them all at once.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Juiced Systems",
+    "email": "dylan@juicedsystems.com"
+  },
+  "license": "MIT",
+  "keywords": ["google-search-console", "gsc", "seo", "multi-site", "mcp"],
+  "mcpServers": {
+    "gsc-multi-site": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/server.js"]
+    }
+  }
+}
